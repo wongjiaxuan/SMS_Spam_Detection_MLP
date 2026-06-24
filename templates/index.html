@@ -31,7 +31,6 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        /* ========== HEADER ========== */
         header {
             text-align: center;
             padding: 30px 0 40px 0;
@@ -82,7 +81,39 @@
             margin-top: 8px;
         }
         
-        /* ========== SECTIONS ========== */
+        /* Dataset Attribution */
+        .dataset-attribution {
+            margin-top: 15px;
+            padding: 12px 20px;
+            background: #f0f4ff;
+            border-radius: 12px;
+            border: 1px solid #dbeafe;
+            display: inline-block;
+            font-size: 0.85em;
+            color: #4b5563;
+        }
+        
+        .dataset-attribution a {
+            color: #4f46e5;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .dataset-attribution a:hover {
+            text-decoration: underline;
+        }
+        
+        .dataset-attribution .badge-uci {
+            display: inline-block;
+            background: #4f46e5;
+            color: white;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 0.7em;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+        
         section {
             margin: 30px 0;
             padding: 30px;
@@ -111,7 +142,6 @@
             font-size: 1.3em;
         }
         
-        /* ========== INPUT GROUPS ========== */
         .input-group {
             display: flex;
             flex-direction: column;
@@ -193,7 +223,19 @@
             box-shadow: 0 8px 30px rgba(16, 185, 129, 0.45);
         }
         
-        /* ========== RESULT BOX ========== */
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35);
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(239, 68, 68, 0.45);
+        }
+        
+        /* Result Box */
         #resultContainer {
             margin-top: 20px;
             display: none;
@@ -248,7 +290,7 @@
             font-weight: 500;
         }
         
-        /* ========== STATS GRID ========== */
+        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -294,7 +336,7 @@
             display: block;
         }
         
-        /* ========== CHARTS GRID ========== */
+        /* Charts Grid */
         .charts-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -353,9 +395,10 @@
             min-height: 300px;
             color: #9ca3af;
             font-size: 0.95em;
+            gap: 12px;
         }
         
-        /* ========== BATCH RESULTS ========== */
+        /* Batch Results */
         #batchResults {
             margin-top: 18px;
             display: grid;
@@ -413,23 +456,15 @@
             background: rgba(16, 185, 129, 0.1);
         }
         
-        /* ========== SCROLLBAR ========== */
-        #batchResults::-webkit-scrollbar {
-            width: 6px;
-        }
-        #batchResults::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        #batchResults::-webkit-scrollbar-thumb {
-            background: #c4b5fd;
-            border-radius: 10px;
-        }
-        #batchResults::-webkit-scrollbar-thumb:hover {
-            background: #a78bfa;
+        .batch-empty {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+            font-size: 1em;
+            grid-column: 1 / -1;
         }
         
-        /* ========== LOADING SPINNER ========== */
+        /* Spinner */
         .spinner {
             display: inline-block;
             width: 24px;
@@ -445,7 +480,32 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* ========== RESPONSIVE ========== */
+        .batch-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            padding-top: 25px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            font-size: 0.85em;
+            color: #6b7280;
+        }
+        
+        .footer a {
+            color: #4f46e5;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Responsive */
         @media (max-width: 1024px) {
             .charts-grid {
                 grid-template-columns: 1fr;
@@ -487,6 +547,10 @@
                 padding: 12px 25px;
                 font-size: 0.9em;
             }
+            .dataset-attribution {
+                font-size: 0.75em;
+                padding: 10px 15px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -503,19 +567,39 @@
                 width: 100%;
                 justify-content: center;
             }
+            .batch-actions {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- ===== HEADER ===== -->
+        <!-- Header -->
         <header>
             <div class="header-badge">🚀 Powered by Neural Networks</div>
             <h1>📱 SMS Spam Detection</h1>
             <p>Multi-Layer Perceptron with Backpropagation &bull; 98.13% Accuracy</p>
+            
+            <!-- Dataset Attribution -->
+            <div class="dataset-attribution">
+                <span class="badge-uci">📊 UCI</span>
+                Dataset: 
+                <a href="https://archive.ics.uci.edu/dataset/228/sms+spam+collection" target="_blank">
+                    SMS Spam Collection
+                </a>
+                &bull; 
+                <a href="https://doi.org/10.24432/C5CC84" target="_blank">
+                    Almeida &amp; Hidalgo (2011)
+                </a>
+                &bull; 
+                <span style="color:#6b7280;">5,574 messages</span>
+                &bull; 
+                <span style="color:#6b7280;">CC BY 4.0</span>
+            </div>
         </header>
 
-        <!-- ===== PREDICTION SECTION ===== -->
+        <!-- Prediction Section -->
         <section>
             <div class="section-title">
                 <span class="icon">🔍</span> Check Your Message
@@ -536,19 +620,24 @@
             </div>
         </section>
 
-        <!-- ===== BATCH TESTING ===== -->
+        <!-- Batch Testing -->
         <section>
             <div class="section-title">
                 <span class="icon">📋</span> Batch Testing
             </div>
             <div class="input-group">
                 <textarea id="batchInput" placeholder="Enter multiple messages (one per line)..." rows="4"></textarea>
-                <button class="btn btn-success" onclick="batchPredict()">📊 Test All Messages</button>
+                <div class="batch-actions">
+                    <button class="btn btn-success" onclick="batchPredict()">📊 Test All Messages</button>
+                    <button class="btn btn-danger" onclick="clearBatch()">🗑️ Clear Results</button>
+                </div>
             </div>
-            <div id="batchResults"></div>
+            <div id="batchResults">
+                <div class="batch-empty">📝 Enter messages and click "Test All Messages"</div>
+            </div>
         </section>
 
-        <!-- ===== STATISTICS ===== -->
+        <!-- Statistics -->
         <section>
             <div class="section-title">
                 <span class="icon">📊</span> Model Performance
@@ -577,7 +666,7 @@
             </div>
         </section>
 
-        <!-- ===== CHARTS ===== -->
+        <!-- Charts -->
         <section>
             <div class="section-title">
                 <span class="icon">📈</span> Visualizations
@@ -603,6 +692,24 @@
                 </div>
             </div>
         </section>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                Built with ❤️ using 
+                <a href="https://scikit-learn.org/" target="_blank">scikit-learn</a>, 
+                <a href="https://flask.palletsprojects.com/" target="_blank">Flask</a>, and 
+                <a href="https://matplotlib.org/" target="_blank">Matplotlib</a>
+                &bull; 
+                <a href="https://github.com/" target="_blank">View on GitHub</a>
+            </p>
+            <p style="margin-top:5px; font-size:0.8em; color:#9ca3af;">
+                Dataset: SMS Spam Collection &bull; 
+                <a href="https://doi.org/10.24432/C5CC84" target="_blank">Almeida &amp; Hidalgo (2011)</a>
+                &bull; 
+                <a href="https://archive.ics.uci.edu/dataset/228/sms+spam+collection" target="_blank">UCI Machine Learning Repository</a>
+            </p>
+        </div>
     </div>
 
     <script>
@@ -677,7 +784,7 @@
             
             const messages = input.split('\n').filter(m => m.trim());
             const container = document.getElementById('batchResults');
-            container.innerHTML = '<div style="text-align:center;padding:30px;"><div class="spinner"></div><br><span style="color:#6b7280;">Analyzing messages...</span></div>';
+            container.innerHTML = '<div style="text-align:center;padding:30px;grid-column:1/-1;"><div class="spinner"></div><br><span style="color:#6b7280;">Analyzing messages...</span></div>';
             
             fetch('/batch_predict', {
                 method: 'POST',
@@ -692,6 +799,11 @@
                 }
                 
                 container.innerHTML = '';
+                
+                if (data.results.length === 0) {
+                    container.innerHTML = '<div class="batch-empty">📝 No valid messages found</div>';
+                    return;
+                }
                 
                 data.results.forEach(result => {
                     const div = document.createElement('div');
@@ -710,7 +822,16 @@
         }
         
         // ============================================================
-        // CLEAR MESSAGE
+        // CLEAR BATCH RESULTS
+        // ============================================================
+        function clearBatch() {
+            const container = document.getElementById('batchResults');
+            container.innerHTML = '<div class="batch-empty">📝 Enter messages and click "Test All Messages"</div>';
+            document.getElementById('batchInput').value = '';
+        }
+        
+        // ============================================================
+        // CLEAR SINGLE MESSAGE
         // ============================================================
         function clearMessage() {
             document.getElementById('messageInput').value = '';
@@ -738,22 +859,22 @@
         }
         
         // ============================================================
-        // LOAD CHARTS WITH IMG TAGS
+        // LOAD CHARTS
         // ============================================================
         function loadCharts() {
             const timestamp = new Date().getTime();
             
             // Class Distribution
             const classContainer = document.getElementById('classDistContainer');
-            classContainer.innerHTML = `<img src="/plot_class_distribution?t=${timestamp}" alt="Class Distribution" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:#ef4444;\\'>❌ Failed to load chart</div>'">`;
+            classContainer.innerHTML = `<img src="/plot_class_distribution?t=${timestamp}" alt="Class Distribution" style="width:100%;height:auto;max-height:400px;object-fit:contain;" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:#ef4444;\\'>❌ Failed to load chart</div>'">`;
             
             // Confusion Matrix
             const confContainer = document.getElementById('confMatrixContainer');
-            confContainer.innerHTML = `<img src="/plot_confusion_matrix?t=${timestamp}" alt="Confusion Matrix" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:#ef4444;\\'>❌ Failed to load chart</div>'">`;
+            confContainer.innerHTML = `<img src="/plot_confusion_matrix?t=${timestamp}" alt="Confusion Matrix" style="width:100%;height:auto;max-height:400px;object-fit:contain;" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:#ef4444;\\'>❌ Failed to load chart</div>'">`;
             
             // Feature Importance
             const featureContainer = document.getElementById('featureImportContainer');
-            featureContainer.innerHTML = `<img src="/plot_feature_importance?t=${timestamp}" alt="Feature Importance" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:#ef4444;\\'>❌ Failed to load chart</div>'">`;
+            featureContainer.innerHTML = `<img src="/plot_feature_importance?t=${timestamp}" alt="Feature Importance" style="width:100%;height:auto;max-height:400px;object-fit:contain;" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:#ef4444;\\'>❌ Failed to load chart</div>'">`;
         }
         
         // ============================================================
