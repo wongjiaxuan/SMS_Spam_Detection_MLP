@@ -383,7 +383,7 @@
         .chart-card img {
             width: 100%;
             height: auto;
-            max-height: 400px;
+            max-height: 1000px;
             object-fit: contain;
             border-radius: 8px;
         }
@@ -684,6 +684,12 @@
                         <div class="chart-loading">⏳ Loading chart...</div>
                     </div>
                 </div>
+                <div class="chart-card">
+                    <h3>📉 Training Loss Curve</h3>
+                    <div class="chart-container" id="trainingHistoryContainer">
+                        <div class="chart-loading">⏳ Loading chart...</div>
+                    </div>
+                </div>
                 <div class="chart-card full-width">
                     <h3>⭐ Feature Importance</h3>
                     <div class="chart-container" id="featureImportContainer">
@@ -871,6 +877,10 @@
             // Confusion Matrix
             const confContainer = document.getElementById('confMatrixContainer');
             confContainer.innerHTML = `<img src="/plot_confusion_matrix?t=${timestamp}" alt="Confusion Matrix" style="width:100%;height:auto;max-height:400px;object-fit:contain;" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:#ef4444;\\'>❌ Failed to load chart</div>'">`;
+            
+            // Training History / Loss Curve
+            const trainingContainer = document.getElementById('trainingHistoryContainer');
+            trainingContainer.innerHTML = `<img src="/plot_training_history?t=${timestamp}" alt="Training Loss Curve" style="width:100%;height:auto;max-height:400px;object-fit:contain;" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:#ef4444;\\'>❌ Failed to load chart</div>'">`;
             
             // Feature Importance
             const featureContainer = document.getElementById('featureImportContainer');

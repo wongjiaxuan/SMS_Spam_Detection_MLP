@@ -286,6 +286,63 @@ def generate_feature_importance():
     
     return img.getvalue()
 
+def generate_training_history():
+    """Generate training loss curve from actual model data"""
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Check if model has loss_curve_ (real training history)
+    if hasattr(model, 'loss_curve_') and len(model.loss_curve_) > 0:
+        loss_values = model.loss_curve_
+        iterations = range(1, len(loss_values) + 1)
+        
+        ax.plot(iterations, loss_values, linewidth=2, color='#3498db', label='Training Loss')
+        
+        # Add annotations
+        final_loss = loss_values[-1]
+        ax.annotate(f'Final Loss: {final_loss:.4f}',
+                   xy=(len(loss_values), final_loss),
+                   xytext=(len(loss_values)-5, final_loss + 0.05),
+                   fontsize=10,
+                   arrowprops=dict(arrowstyle='->', color='red'))
+        
+        ax.annotate(f'Iterations: {len(loss_values)}',
+                   xy=(len(loss_values), final_loss),
+                   xytext=(len(loss_values)-8, final_loss - 0.05),
+                   fontsize=10,
+                   arrowprops=dict(arrowstyle='->', color='red'))
+        
+        print(f"✅ Using real training data: {len(loss_values)} iterations")
+        
+    else:
+        # Fallback: sample data (if model doesn't have loss_curve_)
+        print("⚠️ No loss_curve_ found, using sample data")
+        x = np.arange(1, 24)
+        y = 0.5 * np.exp(-0.1 * x) + 0.03 + 0.02 * np.random.randn(len(x))
+        y = np.clip(y, 0.02, 0.5)
+        
+        ax.plot(x, y, linewidth=2, color='#3498db', label='Training Loss (Sample)')
+        ax.annotate(f'Final Loss: {y[-1]:.4f}',
+                   xy=(len(x), y[-1]),
+                   xytext=(len(x)-5, y[-1] + 0.05),
+                   fontsize=10,
+                   arrowprops=dict(arrowstyle='->', color='red'))
+    
+    # Labels and styling
+    ax.set_xlabel('Iteration', fontsize=12)
+    ax.set_ylabel('Loss', fontsize=12)
+    ax.set_title('Training Loss Curve', fontsize=16, fontweight='bold')
+    ax.legend(fontsize=11)
+    ax.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    
+    img = BytesIO()
+    fig.savefig(img, format='png', dpi=150, bbox_inches='tight', facecolor='white')
+    img.seek(0)
+    plt.close(fig)
+    
+    return img.getvalue()
+
 # ============================================
 # CHART ROUTES WITH CACHING
 # ============================================
@@ -320,31 +377,15 @@ def plot_feature_importance():
         print(f"❌ Error: {e}")
         return jsonify({'error': str(e)}), 500
 
+# ============================================
+# ONLY ONE definition of plot_training_history!
+# ============================================
 @app.route('/plot_training_history')
 def plot_training_history():
-    """Generate training loss curve"""
+    """Generate training loss curve with caching"""
     try:
-        fig, ax = plt.subplots(figsize=(10, 6))
-        x = np.arange(1, 24)
-        y = 0.5 * np.exp(-0.1 * x) + 0.03 + 0.02 * np.random.randn(len(x))
-        y = np.clip(y, 0.02, 0.5)
-        
-        ax.plot(x, y, linewidth=2, color='#3498db', label='Training Loss')
-        ax.set_xlabel('Iteration', fontsize=12)
-        ax.set_ylabel('Loss', fontsize=12)
-        ax.set_title('Training Loss Curve', fontsize=16, fontweight='bold')
-        ax.legend(fontsize=11)
-        ax.grid(True, alpha=0.3)
-        
-        plt.tight_layout()
-        
-        img = BytesIO()
-        fig.savefig(img, format='png', dpi=150, bbox_inches='tight', facecolor='white')
-        img.seek(0)
-        plt.close(fig)
-        
-        return send_file(img, mimetype='image/png')
-        
+        img_data = get_cached_chart('training_history', generate_training_history)
+        return send_file(BytesIO(img_data), mimetype='image/png')
     except Exception as e:
         print(f"❌ Error in plot_training_history: {e}")
         return jsonify({'error': str(e)}), 500
