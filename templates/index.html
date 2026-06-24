@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Spam Detection System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            padding: 20px;
+            color: #1a1a2e;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            padding: 40px;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* ========== HEADER ========== */
+        header {
+            text-align: center;
+            padding: 30px 0 40px 0;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.15);
+            margin-bottom: 35px;
+            position: relative;
+        }
+        
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+            border-radius: 10px;
+        }
+        
+        .header-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 20px;
+            border-radius: 50px;
+            font-size: 0.75em;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        
+        header h1 {
+            font-size: 3.2em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+        
+        header p {
+            color: #6b7280;
+            font-size: 1.15em;
+            font-weight: 400;
+            margin-top: 8px;
+        }
+        
+        /* ========== SECTIONS ========== */
+        section {
+            margin: 30px 0;
+            padding: 30px;
+            background: #f8faff;
+            border-radius: 20px;
+            border: 1px solid rgba(102, 126, 234, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        section:hover {
+            border-color: rgba(102, 126, 234, 0.2);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.05);
+        }
+        
+        .section-title {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section-title .icon {
+            font-size: 1.3em;
+        }
+        
+        /* ========== INPUT GROUPS ========== */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        
+        .input-group textarea {
+            padding: 18px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 14px;
+            font-size: 1em;
+            font-family: 'Inter', sans-serif;
+            resize: vertical;
+            transition: all 0.3s ease;
+            background: white;
+            min-height: 100px;
+            color: #1a1a2e;
+        }
+        
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+        }
+        
+        .input-group textarea::placeholder {
+            color: #9ca3af;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 14px 40px;
+            border: none;
+            border-radius: 14px;
+            font-size: 1em;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.35);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.45);
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.45);
+        }
+        
+        /* ========== RESULT BOX ========== */
+        #resultContainer {
+            margin-top: 20px;
+            display: none;
+            animation: fadeInUp 0.5s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        #resultBox {
+            padding: 25px 30px;
+            border-radius: 16px;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            border-left: 6px solid #667eea;
+        }
+        
+        #resultBox.spam {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        
+        #resultBox.ham {
+            border-left-color: #10b981;
+            background: #ecfdf5;
+        }
+        
+        #resultIcon {
+            font-size: 3.5em;
+        }
+        
+        #resultText {
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+        
+        #resultProbability {
+            margin-left: auto;
+            font-size: 1.1em;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        /* ========== STATS GRID ========== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px 20px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.06);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            border-color: rgba(102, 126, 234, 0.15);
+        }
+        
+        .stat-value {
+            font-size: 2.8em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+        
+        .stat-label {
+            color: #6b7280;
+            margin-top: 6px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        .stat-icon {
+            font-size: 1.8em;
+            margin-bottom: 6px;
+            display: block;
+        }
+        
+        /* ========== CHARTS GRID ========== */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        
+        .chart-card {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(102, 126, 234, 0.06);
+            transition: all 0.3s ease;
+        }
+        
+        .chart-card:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+            border-color: rgba(102, 126, 234, 0.12);
+        }
+        
+        .chart-card.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .chart-card h3 {
+            color: #1a1a2e;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+        
+        .chart-card .chart-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+            background: #fafbff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .chart-card img {
+            width: 100%;
+            height: auto;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        
+        .chart-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            color: #9ca3af;
+            font-size: 0.95em;
+        }
+        
+        /* ========== BATCH RESULTS ========== */
+        #batchResults {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .batch-result {
+            padding: 14px 18px;
+            border-radius: 12px;
+            background: white;
+            border-left: 4px solid #e5e7eb;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.03);
+            transition: all 0.2s ease;
+        }
+        
+        .batch-result:hover {
+            transform: translateX(4px);
+        }
+        
+        .batch-result.spam {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        
+        .batch-result.ham {
+            border-left-color: #10b981;
+            background: #ecfdf5;
+        }
+        
+        .batch-result .msg {
+            font-size: 0.9em;
+            color: #1f2937;
+            line-height: 1.4;
+        }
+        
+        .batch-result .label {
+            font-weight: 600;
+            margin-top: 5px;
+            font-size: 0.8em;
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .batch-result.spam .label {
+            color: #dc2626;
+            background: rgba(239, 68, 68, 0.1);
+        }
+        .batch-result.ham .label {
+            color: #059669;
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        /* ========== SCROLLBAR ========== */
+        #batchResults::-webkit-scrollbar {
+            width: 6px;
+        }
+        #batchResults::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        #batchResults::-webkit-scrollbar-thumb {
+            background: #c4b5fd;
+            border-radius: 10px;
+        }
+        #batchResults::-webkit-scrollbar-thumb:hover {
+            background: #a78bfa;
+        }
+        
+        /* ========== LOADING SPINNER ========== */
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #e5e7eb;
+            border-radius: 50%;
+            border-top: 3px solid #667eea;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                border-radius: 20px;
+            }
+            header h1 {
+                font-size: 2em;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            .stat-value {
+                font-size: 2em;
+            }
+            #batchResults {
+                grid-template-columns: 1fr;
+            }
+            #resultBox {
+                flex-wrap: wrap;
+                padding: 20px;
+            }
+            #resultProbability {
+                margin-left: 0;
+            }
+            section {
+                padding: 20px;
+            }
+            .btn {
+                padding: 12px 25px;
+                font-size: 0.9em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            header h1 {
+                font-size: 1.5em;
+            }
+            .btn-group {
+                flex-direction: column;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ===== HEADER ===== -->
+        <header>
+            <div class="header-badge">🚀 Powered by Neural Networks</div>
+            <h1>📱 SMS Spam Detection</h1>
+            <p>Multi-Layer Perceptron with Backpropagation &bull; 98.13% Accuracy</p>
+        </header>
+
+        <!-- ===== PREDICTION SECTION ===== -->
+        <section>
+            <div class="section-title">
+                <span class="icon">🔍</span> Check Your Message
+            </div>
+            <div class="input-group">
+                <textarea id="messageInput" placeholder="Type or paste your SMS message here..." rows="4"></textarea>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="predictMessage()">🔎 Analyze Message</button>
+                    <button class="btn btn-secondary" onclick="clearMessage()">🗑️ Clear</button>
+                </div>
+            </div>
+            <div id="resultContainer">
+                <div id="resultBox">
+                    <div id="resultIcon">✅</div>
+                    <div id="resultText">Legitimate (HAM)</div>
+                    <div id="resultProbability">Confidence: 98.5%</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== BATCH TESTING ===== -->
+        <section>
+            <div class="section-title">
+                <span class="icon">📋</span> Batch Testing
+            </div>
+            <div class="input-group">
+                <textarea id="batchInput" placeholder="Enter multiple messages (one per line)..." rows="4"></textarea>
+                <button class="btn btn-success" onclick="batchPredict()">📊 Test All Messages</button>
+            </div>
+            <div id="batchResults"></div>
+        </section>
+
+        <!-- ===== STATISTICS ===== -->
+        <section>
+            <div class="section-title">
+                <span class="icon">📊</span> Model Performance
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-icon">🎯</span>
+                    <div class="stat-value" id="accuracy">-</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">📐</span>
+                    <div class="stat-value" id="precision">-</div>
+                    <div class="stat-label">Precision</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">📊</span>
+                    <div class="stat-value" id="recall">-</div>
+                    <div class="stat-label">Recall</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">⚖️</span>
+                    <div class="stat-value" id="f1score">-</div>
+                    <div class="stat-label">F1-Score</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== CHARTS ===== -->
+        <section>
+            <div class="section-title">
+                <span class="icon">📈</span> Visualizations
+            </div>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>📊 Class Distribution</h3>
+                    <div class="chart-container" id="classDistContainer">
+                        <div class="chart-loading">⏳ Loading chart...</div>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>🔢 Confusion Matrix</h3>
+                    <div class="chart-container" id="confMatrixContainer">
+                        <div class="chart-loading">⏳ Loading chart...</div>
+                    </div>
+                </div>
+                <div class="chart-card full-width">
+                    <h3>⭐ Feature Importance</h3>
+                    <div class="chart-container" id="featureImportContainer">
+                        <div class="chart-loading">⏳ Loading chart...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // ============================================================
+        // PREDICT SINGLE MESSAGE
+        // ============================================================
+        function predictMessage() {
+            const message = document.getElementById('messageInput').value.trim();
+            
+            if (!message) {
+                alert('⚠️ Please enter a message to analyze.');
+                return;
+            }
+            
+            const container = document.getElementById('resultContainer');
+            container.style.display = 'block';
+            
+            const box = document.getElementById('resultBox');
+            box.className = '';
+            
+            document.getElementById('resultIcon').textContent = '⏳';
+            document.getElementById('resultText').textContent = 'Analyzing...';
+            document.getElementById('resultProbability').textContent = '';
+            
+            fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('❌ Error: ' + data.error);
+                    return;
+                }
+                
+                const icon = document.getElementById('resultIcon');
+                const text = document.getElementById('resultText');
+                const prob = document.getElementById('resultProbability');
+                
+                if (data.is_spam) {
+                    icon.textContent = '🚫';
+                    text.textContent = '⚠️ SPAM DETECTED';
+                    text.style.color = '#dc2626';
+                    box.className = 'spam';
+                } else {
+                    icon.textContent = '✅';
+                    text.textContent = '✔️ LEGITIMATE (HAM)';
+                    text.style.color = '#059669';
+                    box.className = 'ham';
+                }
+                
+                prob.textContent = `Confidence: ${data.probability}%`;
+                container.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error analyzing message. Please try again.');
+            });
+        }
+        
+        // ============================================================
+        // BATCH PREDICT
+        // ============================================================
+        function batchPredict() {
+            const input = document.getElementById('batchInput').value.trim();
+            
+            if (!input) {
+                alert('⚠️ Please enter at least one message.');
+                return;
+            }
+            
+            const messages = input.split('\n').filter(m => m.trim());
+            const container = document.getElementById('batchResults');
+            container.innerHTML = '<div style="text-align:center;padding:30px;"><div class="spinner"></div><br><span style="color:#6b7280;">Analyzing messages...</span></div>';
+            
+            fetch('/batch_predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: messages })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('❌ Error: ' + data.error);
+                    return;
+                }
+                
+                container.innerHTML = '';
+                
+                data.results.forEach(result => {
+                    const div = document.createElement('div');
+                    div.className = `batch-result ${result.result}`;
+                    div.innerHTML = `
+                        <div class="msg">${result.message}</div>
+                        <div class="label">${result.result.toUpperCase()} (${result.probability}%)</div>
+                    `;
+                    container.appendChild(div);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error analyzing messages. Please try again.');
+            });
+        }
+        
+        // ============================================================
+        // CLEAR MESSAGE
+        // ============================================================
+        function clearMessage() {
+            document.getElementById('messageInput').value = '';
+            document.getElementById('resultContainer').style.display = 'none';
+        }
+        
+        // ============================================================
+        // LOAD STATISTICS
+        // ============================================================
+        function loadStats() {
+            fetch('/get_stats')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error loading stats:', data.error);
+                    return;
+                }
+                
+                document.getElementById('accuracy').textContent = data.accuracy + '%';
+                document.getElementById('precision').textContent = data.precision + '%';
+                document.getElementById('recall').textContent = data.recall + '%';
+                document.getElementById('f1score').textContent = data.f1_score + '%';
+            })
+            .catch(error => console.error('Error:', error));
+        }
+        
+        // ============================================================
+        // LOAD CHARTS WITH IMG TAGS
+        // ============================================================
+        function loadCharts() {
+            const timestamp = new Date().getTime();
+            
+            // Class Distribution
+            const classContainer = document.getElementById('classDistContainer');
+            classContainer.innerHTML = `<img src="/plot_class_distribution?t=${timestamp}" alt="Class Distribution" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:#ef4444;\\'>❌ Failed to load chart</div>'">`;
+            
+            // Confusion Matrix
+            const confContainer = document.getElementById('confMatrixContainer');
+            confContainer.innerHTML = `<img src="/plot_confusion_matrix?t=${timestamp}" alt="Confusion Matrix" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:#ef4444;\\'>❌ Failed to load chart</div>'">`;
+            
+            // Feature Importance
+            const featureContainer = document.getElementById('featureImportContainer');
+            featureContainer.innerHTML = `<img src="/plot_feature_importance?t=${timestamp}" alt="Feature Importance" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:#ef4444;\\'>❌ Failed to load chart</div>'">`;
+        }
+        
+        // ============================================================
+        // ENTER KEY SUPPORT
+        // ============================================================
+        document.getElementById('messageInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                predictMessage();
+            }
+        });
+        
+        // ============================================================
+        // INITIALIZE
+        // ============================================================
+        window.onload = function() {
+            loadStats();
+            loadCharts();
+            
+            // Auto-refresh charts every 30 seconds
+            setInterval(loadCharts, 30000);
+        };
+    </script>
+</body>
+</html>
