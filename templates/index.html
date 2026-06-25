@@ -239,6 +239,7 @@ qs('messageInput').addEventListener('keydown',(e)=>{
 window.onload=function(){
     loadStats();
     loadCharts();
+    // Refresh charts every 30 seconds
     setInterval(loadCharts,30000);
 };
 
@@ -246,3 +247,4 @@ window.onload=function(){
 
 </body>
 </html>
+
