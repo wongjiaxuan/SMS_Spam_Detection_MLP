@@ -1,250 +1,912 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SMS Spam Detection System</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-<style>
-/* ================= RESET ================= */
-* { margin:0; padding:0; box-sizing:border-box; }
-
-body {
-    font-family:'Inter', sans-serif;
-    background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
-    min-height:100vh;
-    padding:20px;
-    color:#1a1a2e;
-}
-
-.container {
-    max-width:1400px;
-    margin:auto;
-    background:rgba(255,255,255,0.97);
-    backdrop-filter:blur(20px);
-    border-radius:32px;
-    padding:40px;
-    box-shadow:0 40px 100px rgba(0,0,0,0.5);
-}
-
-/* ===== KEEP REST OF YOUR CSS UNCHANGED ===== */
-/* (omitted only for brevity, NO changes needed) */
-</style>
-</head>
-
-<body>
-<div class="container">
-
-<header>
-    <div class="header-badge">🚀 Powered by Neural Networks</div>
-    <h1>📱 SMS Spam Detection</h1>
-    <p>MLP Neural Network • 98.13% Accuracy</p>
-</header>
-
-<!-- ================= MESSAGE ================= -->
-<section>
-<div class="section-title">🔍 Check Your Message</div>
-
-<textarea id="messageInput" placeholder="Type SMS..." rows="4"></textarea>
-
-<div class="btn-group">
-    <button class="btn btn-primary" onclick="predictMessage()">Analyze</button>
-    <button class="btn btn-secondary" onclick="clearMessage()">Clear</button>
-</div>
-
-<div id="resultContainer">
-    <div id="resultBox">
-        <div id="resultIcon">✅</div>
-        <div id="resultText">Legitimate</div>
-        <div id="resultProbability"></div>
-    </div>
-</div>
-</section>
-
-<!-- ================= BATCH ================= -->
-<section>
-<div class="section-title">📋 Batch Testing</div>
-
-<textarea id="batchInput" placeholder="One message per line"></textarea>
-
-<div class="batch-actions">
-    <button class="btn btn-success" onclick="batchPredict()">Test</button>
-    <button class="btn btn-danger" onclick="clearBatch()">Clear</button>
-</div>
-
-<div id="batchResults">
-    <div class="batch-empty">Enter messages</div>
-</div>
-</section>
-
-<!-- ================= STATS ================= -->
-<section>
-<div class="section-title">📊 Model Performance</div>
-
-<div class="stats-grid">
-    <div class="stat-card"><div id="accuracy">-</div><div>Accuracy</div></div>
-    <div class="stat-card"><div id="precision">-</div><div>Precision</div></div>
-    <div class="stat-card"><div id="recall">-</div><div>Recall</div></div>
-    <div class="stat-card"><div id="f1score">-</div><div>F1</div></div>
-</div>
-</section>
-
-<!-- ================= CHARTS ================= -->
-<section>
-<div class="section-title">📈 Visualizations</div>
-
-<div class="charts-grid">
-    <div id="classDistContainer"></div>
-    <div id="confMatrixContainer"></div>
-    <div id="trainingHistoryContainer"></div>
-    <div id="featureImportContainer"></div>
-</div>
-</section>
-
-</div>
-
-<script>
-
-/* ================= CONSTANTS ================= */
-const jsonHeader = { 'Content-Type': 'application/json' };
-
-/* ================= HELPERS ================= */
-function qs(id){ return document.getElementById(id); }
-
-function loadChart(id, url){
-    qs(id).innerHTML =
-        `<img src="${url}?t=${Date.now()}" style="width:100%;height:auto;max-height:400px;">`;
-}
-
-/* ================= SINGLE PREDICT ================= */
-function predictMessage(){
-    const msg = qs('messageInput').value.trim();
-    if(!msg) return alert('Enter message');
-
-    const container = qs('resultContainer');
-    container.style.display = 'block';
-
-    const box = qs('resultBox');
-    box.className = '';
-
-    qs('resultIcon').textContent = '⏳';
-    qs('resultText').textContent = 'Analyzing...';
-    qs('resultProbability').textContent = '';
-
-    fetch('/predict', {
-        method:'POST',
-        headers:jsonHeader,
-        body:JSON.stringify({message:msg})
-    })
-    .then(r=>r.json())
-    .then(data=>{
-        if(data.error) return alert(data.error);
-
-        const icon = qs('resultIcon');
-        const text = qs('resultText');
-        const prob = qs('resultProbability');
-
-        if(data.is_spam){
-            icon.textContent='🚫';
-            text.textContent='SPAM';
-            box.className='spam';
-        }else{
-            icon.textContent='✅';
-            text.textContent='HAM';
-            box.className='ham';
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Spam Detection System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            padding: 20px;
+            color: #1a1a2e;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            padding: 40px;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0 40px 0;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.15);
+            margin-bottom: 35px;
+            position: relative;
+        }
+        
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+            border-radius: 10px;
+        }
+        
+        .header-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 20px;
+            border-radius: 50px;
+            font-size: 0.75em;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        
+        header h1 {
+            font-size: 3.2em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+        
+        header p {
+            color: #6b7280;
+            font-size: 1.15em;
+            font-weight: 400;
+            margin-top: 8px;
+        }
+        
+        /* Dataset Attribution */
+        .dataset-attribution {
+            margin-top: 15px;
+            padding: 12px 20px;
+            background: #f0f4ff;
+            border-radius: 12px;
+            border: 1px solid #dbeafe;
+            display: inline-block;
+            font-size: 0.85em;
+            color: #4b5563;
+        }
+        
+        .dataset-attribution a {
+            color: #4f46e5;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .dataset-attribution a:hover {
+            text-decoration: underline;
+        }
+        
+        .dataset-attribution .badge-uci {
+            display: inline-block;
+            background: #4f46e5;
+            color: white;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 0.7em;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+        
+        section {
+            margin: 30px 0;
+            padding: 30px;
+            background: #f8faff;
+            border-radius: 20px;
+            border: 1px solid rgba(102, 126, 234, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        section:hover {
+            border-color: rgba(102, 126, 234, 0.2);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.05);
+        }
+        
+        .section-title {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section-title .icon {
+            font-size: 1.3em;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        
+        .input-group textarea {
+            padding: 18px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 14px;
+            font-size: 1em;
+            font-family: 'Inter', sans-serif;
+            resize: vertical;
+            transition: all 0.3s ease;
+            background: white;
+            min-height: 100px;
+            color: #1a1a2e;
+        }
+        
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+        }
+        
+        .input-group textarea::placeholder {
+            color: #9ca3af;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 14px 40px;
+            border: none;
+            border-radius: 14px;
+            font-size: 1em;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.35);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.45);
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.45);
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35);
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(239, 68, 68, 0.45);
+        }
+        
+        /* Result Box */
+        #resultContainer {
+            margin-top: 20px;
+            display: none;
+            animation: fadeInUp 0.5s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        #resultBox {
+            padding: 25px 30px;
+            border-radius: 16px;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            border-left: 6px solid #667eea;
+        }
+        
+        #resultBox.spam {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        
+        #resultBox.ham {
+            border-left-color: #10b981;
+            background: #ecfdf5;
+        }
+        
+        #resultIcon {
+            font-size: 3.5em;
+        }
+        
+        #resultText {
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+        
+        #resultProbability {
+            margin-left: auto;
+            font-size: 1.1em;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px 20px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.06);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            border-color: rgba(102, 126, 234, 0.15);
+        }
+        
+        .stat-value {
+            font-size: 2.8em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+        
+        .stat-label {
+            color: #6b7280;
+            margin-top: 6px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        .stat-icon {
+            font-size: 1.8em;
+            margin-bottom: 6px;
+            display: block;
+        }
+        
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        
+        .chart-card {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(102, 126, 234, 0.06);
+            transition: all 0.3s ease;
+        }
+        
+        .chart-card:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+            border-color: rgba(102, 126, 234, 0.12);
+        }
+        
+        .chart-card.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .chart-card h3 {
+            color: #1a1a2e;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+        
+        .chart-card .chart-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+            background: #fafbff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .chart-card img {
+            width: 100%;
+            height: auto;
+            max-height: 1000px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        
+        .chart-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            color: #9ca3af;
+            font-size: 0.95em;
+            gap: 12px;
+        }
+        
+        /* Batch Results */
+        #batchResults {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .batch-result {
+            padding: 14px 18px;
+            border-radius: 12px;
+            background: white;
+            border-left: 4px solid #e5e7eb;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.03);
+            transition: all 0.2s ease;
+        }
+        
+        .batch-result:hover {
+            transform: translateX(4px);
+        }
+        
+        .batch-result.spam {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        
+        .batch-result.ham {
+            border-left-color: #10b981;
+            background: #ecfdf5;
+        }
+        
+        .batch-result .msg {
+            font-size: 0.9em;
+            color: #1f2937;
+            line-height: 1.4;
+        }
+        
+        .batch-result .label {
+            font-weight: 600;
+            margin-top: 5px;
+            font-size: 0.8em;
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .batch-result.spam .label {
+            color: #dc2626;
+            background: rgba(239, 68, 68, 0.1);
+        }
+        .batch-result.ham .label {
+            color: #059669;
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .batch-empty {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+            font-size: 1em;
+            grid-column: 1 / -1;
+        }
+        
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #e5e7eb;
+            border-radius: 50%;
+            border-top: 3px solid #667eea;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .batch-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            padding-top: 25px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            font-size: 0.85em;
+            color: #6b7280;
+        }
+        
+        .footer a {
+            color: #4f46e5;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                border-radius: 20px;
+            }
+            header h1 {
+                font-size: 2em;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            .stat-value {
+                font-size: 2em;
+            }
+            #batchResults {
+                grid-template-columns: 1fr;
+            }
+            #resultBox {
+                flex-wrap: wrap;
+                padding: 20px;
+            }
+            #resultProbability {
+                margin-left: 0;
+            }
+            section {
+                padding: 20px;
+            }
+            .btn {
+                padding: 12px 25px;
+                font-size: 0.9em;
+            }
+            .dataset-attribution {
+                font-size: 0.75em;
+                padding: 10px 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            header h1 {
+                font-size: 1.5em;
+            }
+            .btn-group {
+                flex-direction: column;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .batch-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-badge">🚀 Powered by Neural Networks</div>
+            <h1>📱 SMS Spam Detection</h1>
+            <p>Multi-Layer Perceptron with Backpropagation &bull; 98.13% Accuracy</p>
+            
+            <!-- Dataset Attribution -->
+            <div class="dataset-attribution">
+                <span class="badge-uci">📊 UCI</span>
+                Dataset: 
+                <a href="https://archive.ics.uci.edu/dataset/228/sms+spam+collection" target="_blank">
+                    SMS Spam Collection
+                </a>
+                &bull; 
+                <a href="https://doi.org/10.24432/C5CC84" target="_blank">
+                    Almeida &amp; Hidalgo (2011)
+                </a>
+                &bull; 
+                <span style="color:#6b7280;">5,574 messages</span>
+                &bull; 
+                <span style="color:#6b7280;">CC BY 4.0</span>
+            </div>
+        </header>
 
-        prob.textContent = `Confidence: ${data.probability}%`;
-    })
-    .catch(e=>console.error(e));
-}
+        <!-- Prediction Section -->
+        <section>
+            <div class="section-title">
+                <span class="icon">🔍</span> Check Your Message
+            </div>
+            <div class="input-group">
+                <textarea id="messageInput" placeholder="Type or paste your SMS message here..." rows="4"></textarea>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="predictMessage()">🔎 Analyze Message</button>
+                    <button class="btn btn-secondary" onclick="clearMessage()">🗑️ Clear</button>
+                </div>
+            </div>
+            <div id="resultContainer">
+                <div id="resultBox">
+                    <div id="resultIcon">✅</div>
+                    <div id="resultText">Legitimate (HAM)</div>
+                    <div id="resultProbability">Confidence: 98.5%</div>
+                </div>
+            </div>
+        </section>
 
-/* ================= BATCH ================= */
-function batchPredict(){
-    const input = qs('batchInput').value.trim();
-    if(!input) return alert('Enter messages');
+        <!-- Batch Testing -->
+        <section>
+            <div class="section-title">
+                <span class="icon">📋</span> Batch Testing
+            </div>
+            <div class="input-group">
+                <textarea id="batchInput" placeholder="Enter multiple messages (one per line)..." rows="4"></textarea>
+                <div class="batch-actions">
+                    <button class="btn btn-success" onclick="batchPredict()">📊 Test All Messages</button>
+                    <button class="btn btn-danger" onclick="clearBatch()">🗑️ Clear Results</button>
+                </div>
+            </div>
+            <div id="batchResults">
+                <div class="batch-empty">📝 Enter messages and click "Test All Messages"</div>
+            </div>
+        </section>
 
-    const messages = input.split('\n').filter(Boolean);
+        <!-- Statistics -->
+        <section>
+            <div class="section-title">
+                <span class="icon">📊</span> Model Performance
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-icon">🎯</span>
+                    <div class="stat-value" id="accuracy">-</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">📐</span>
+                    <div class="stat-value" id="precision">-</div>
+                    <div class="stat-label">Precision</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">📊</span>
+                    <div class="stat-value" id="recall">-</div>
+                    <div class="stat-label">Recall</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">⚖️</span>
+                    <div class="stat-value" id="f1score">-</div>
+                    <div class="stat-label">F1-Score</div>
+                </div>
+            </div>
+        </section>
 
-    const container = qs('batchResults');
-    container.innerHTML = '<div>Loading...</div>';
+        <!-- Charts -->
+        <section>
+            <div class="section-title">
+                <span class="icon">📈</span> Visualizations
+            </div>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>📊 Class Distribution</h3>
+                    <div class="chart-container" id="classDistContainer">
+                        <div class="chart-loading">⏳ Loading chart...</div>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>🔢 Confusion Matrix</h3>
+                    <div class="chart-container" id="confMatrixContainer">
+                        <div class="chart-loading">⏳ Loading chart...</div>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>📉 Training Loss Curve</h3>
+                    <div class="chart-container" id="trainingHistoryContainer">
+                        <div class="chart-loading">⏳ Loading chart...</div>
+                    </div>
+                </div>
+                <div class="chart-card full-width">
+                    <h3>⭐ Feature Importance</h3>
+                    <div class="chart-container" id="featureImportContainer">
+                        <div class="chart-loading">⏳ Loading chart...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    fetch('/batch_predict',{
-        method:'POST',
-        headers:jsonHeader,
-        body:JSON.stringify({messages})
-    })
-    .then(r=>r.json())
-    .then(data=>{
-        if(data.error) return alert(data.error);
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                Built with ❤️ using 
+                <a href="https://scikit-learn.org/" target="_blank">scikit-learn</a>, 
+                <a href="https://flask.palletsprojects.com/" target="_blank">Flask</a>, and 
+                <a href="https://matplotlib.org/" target="_blank">Matplotlib</a>
+                &bull; 
+                <a href="https://github.com/" target="_blank">View on GitHub</a>
+            </p>
+            <p style="margin-top:5px; font-size:0.8em; color:#9ca3af;">
+                Dataset: SMS Spam Collection &bull; 
+                <a href="https://doi.org/10.24432/C5CC84" target="_blank">Almeida &amp; Hidalgo (2011)</a>
+                &bull; 
+                <a href="https://archive.ics.uci.edu/dataset/228/sms+spam+collection" target="_blank">UCI Machine Learning Repository</a>
+            </p>
+        </div>
+    </div>
 
-        container.innerHTML='';
-
-        data.results.forEach(r=>{
-            const div=document.createElement('div');
-            div.className=`batch-result ${r.result}`;
-            div.innerHTML=
-                `<div class="msg">${r.message}</div>
-                 <div class="label">${r.result.toUpperCase()} (${r.probability}%)</div>`;
-            container.appendChild(div);
+    <script>
+        // ============================================================
+        // PREDICT SINGLE MESSAGE
+        // ============================================================
+        function predictMessage() {
+            const message = document.getElementById('messageInput').value.trim();
+            
+            if (!message) {
+                alert('⚠️ Please enter a message to analyze.');
+                return;
+            }
+            
+            const container = document.getElementById('resultContainer');
+            container.style.display = 'block';
+            
+            const box = document.getElementById('resultBox');
+            box.className = '';
+            
+            document.getElementById('resultIcon').textContent = '⏳';
+            document.getElementById('resultText').textContent = 'Analyzing...';
+            document.getElementById('resultProbability').textContent = '';
+            
+            fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('❌ Error: ' + data.error);
+                    return;
+                }
+                
+                const icon = document.getElementById('resultIcon');
+                const text = document.getElementById('resultText');
+                const prob = document.getElementById('resultProbability');
+                
+                if (data.is_spam) {
+                    icon.textContent = '🚫';
+                    text.textContent = '⚠️ SPAM DETECTED';
+                    text.style.color = '#dc2626';
+                    box.className = 'spam';
+                } else {
+                    icon.textContent = '✅';
+                    text.textContent = '✔️ LEGITIMATE (HAM)';
+                    text.style.color = '#059669';
+                    box.className = 'ham';
+                }
+                
+                prob.textContent = `Confidence: ${data.probability}%`;
+                container.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error analyzing message. Please try again.');
+            });
+        }
+        
+        // ============================================================
+        // BATCH PREDICT
+        // ============================================================
+        function batchPredict() {
+            const input = document.getElementById('batchInput').value.trim();
+            
+            if (!input) {
+                alert('⚠️ Please enter at least one message.');
+                return;
+            }
+            
+            const messages = input.split('\n').filter(m => m.trim());
+            const container = document.getElementById('batchResults');
+            container.innerHTML = '<div style="text-align:center;padding:30px;grid-column:1/-1;"><div class="spinner"></div><br><span style="color:#6b7280;">Analyzing messages...</span></div>';
+            
+            fetch('/batch_predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: messages })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('❌ Error: ' + data.error);
+                    return;
+                }
+                
+                container.innerHTML = '';
+                
+                if (data.results.length === 0) {
+                    container.innerHTML = '<div class="batch-empty">📝 No valid messages found</div>';
+                    return;
+                }
+                
+                data.results.forEach(result => {
+                    const div = document.createElement('div');
+                    div.className = `batch-result ${result.result}`;
+                    div.innerHTML = `
+                        <div class="msg">${result.message}</div>
+                        <div class="label">${result.result.toUpperCase()} (${result.probability}%)</div>
+                    `;
+                    container.appendChild(div);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error analyzing messages. Please try again.');
+            });
+        }
+        
+        // ============================================================
+        // CLEAR BATCH RESULTS
+        // ============================================================
+        function clearBatch() {
+            const container = document.getElementById('batchResults');
+            container.innerHTML = '<div class="batch-empty">📝 Enter messages and click "Test All Messages"</div>';
+            document.getElementById('batchInput').value = '';
+        }
+        
+        // ============================================================
+        // CLEAR SINGLE MESSAGE
+        // ============================================================
+        function clearMessage() {
+            document.getElementById('messageInput').value = '';
+            document.getElementById('resultContainer').style.display = 'none';
+        }
+        
+        // ============================================================
+        // LOAD STATISTICS
+        // ============================================================
+        function loadStats() {
+            fetch('/get_stats')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error loading stats:', data.error);
+                    return;
+                }
+                
+                document.getElementById('accuracy').textContent = data.accuracy + '%';
+                document.getElementById('precision').textContent = data.precision + '%';
+                document.getElementById('recall').textContent = data.recall + '%';
+                document.getElementById('f1score').textContent = data.f1_score + '%';
+            })
+            .catch(error => console.error('Error:', error));
+        }
+        
+        // ============================================================
+        // LOAD CHARTS
+        // ============================================================
+        function loadCharts() {
+            const timestamp = new Date().getTime();
+            
+            // Class Distribution
+            const classContainer = document.getElementById('classDistContainer');
+            classContainer.innerHTML = `<img src="/plot_class_distribution?t=${timestamp}" alt="Class Distribution" style="width:100%;height:auto;max-height:400px;object-fit:contain;" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:#ef4444;\\'>❌ Failed to load chart</div>'">`;
+            
+            // Confusion Matrix
+            const confContainer = document.getElementById('confMatrixContainer');
+            confContainer.innerHTML = `<img src="/plot_confusion_matrix?t=${timestamp}" alt="Confusion Matrix" style="width:100%;height:auto;max-height:400px;object-fit:contain;" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:#ef4444;\\'>❌ Failed to load chart</div>'">`;
+            
+            // Training History / Loss Curve
+            const trainingContainer = document.getElementById('trainingHistoryContainer');
+            trainingContainer.innerHTML = `<img src="/plot_training_history?t=${timestamp}" alt="Training Loss Curve" style="width:100%;height:auto;max-height:400px;object-fit:contain;" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:#ef4444;\\'>❌ Failed to load chart</div>'">`;
+            
+            // Feature Importance
+            const featureContainer = document.getElementById('featureImportContainer');
+            featureContainer.innerHTML = `<img src="/plot_feature_importance?t=${timestamp}" alt="Feature Importance" style="width:100%;height:auto;max-height:400px;object-fit:contain;" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:#ef4444;\\'>❌ Failed to load chart</div>'">`;
+        }
+        
+        // ============================================================
+        // ENTER KEY SUPPORT
+        // ============================================================
+        document.getElementById('messageInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                predictMessage();
+            }
         });
-    })
-    .catch(e=>console.error(e));
-}
-
-/* ================= CLEAR ================= */
-function clearMessage(){
-    qs('messageInput').value='';
-    qs('resultContainer').style.display='none';
-}
-
-function clearBatch(){
-    qs('batchInput').value='';
-    qs('batchResults').innerHTML='<div class="batch-empty">Enter messages</div>';
-}
-
-/* ================= STATS ================= */
-function loadStats(){
-    fetch('/get_stats')
-    .then(r=>r.json())
-    .then(d=>{
-        if(d.error) return;
-
-        qs('accuracy').textContent=d.accuracy+'%';
-        qs('precision').textContent=d.precision+'%';
-        qs('recall').textContent=d.recall+'%';
-        qs('f1score').textContent=d.f1_score+'%';
-    });
-}
-
-/* ================= CHARTS ================= */
-function loadCharts(){
-    loadChart('classDistContainer','/plot_class_distribution');
-    loadChart('confMatrixContainer','/plot_confusion_matrix');
-    loadChart('trainingHistoryContainer','/plot_training_history');
-    loadChart('featureImportContainer','/plot_feature_importance');
-}
-
-/* ================= EVENTS ================= */
-qs('messageInput').addEventListener('keydown',(e)=>{
-    if(e.key==='Enter' && !e.shiftKey){
-        e.preventDefault();
-        predictMessage();
-    }
-});
-
-/* ================= INIT ================= */
-window.onload=function(){
-    loadStats();
-    loadCharts();
-    // Refresh charts every 30 seconds
-    setInterval(loadCharts,30000);
-};
-
-</script>
-
+        
+        // ============================================================
+        // INITIALIZE
+        // ============================================================
+        window.onload = function() {
+            loadStats();
+            loadCharts();
+            
+            // Auto-refresh charts every 30 seconds
+            setInterval(loadCharts, 30000);
+        };
+    </script>
 </body>
 </html>
-
